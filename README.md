@@ -1,46 +1,104 @@
-# Getting Started with Create React App
+# ContaCerta - Frontend React
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Este é o frontend da aplicação ContaCerta, desenvolvido em React com TypeScript e Tailwind CSS.
 
-## Available Scripts
+## Funcionalidades
 
-In the project directory, you can run:
+- **Tela de Login**: Interface moderna para autenticação de usuários
+- **Tela de Registro**: Formulário para criação de novas contas
+- **Design Responsivo**: Interface adaptável para diferentes tamanhos de tela
+- **Validação de Formulários**: Validação client-side com feedback visual
+- **Integração com API**: Comunicação com o backend .NET Core
 
-### `npm start`
+## Tecnologias Utilizadas
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React 18
+- TypeScript
+- Tailwind CSS
+- Axios (para requisições HTTP)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Configuração da API
 
-### `npm test`
+O projeto está configurado para se conectar com a API na porta `7001`. Para alterar a URL da API, edite o arquivo `src/services/api.ts`:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```typescript
+const API_BASE_URL = 'https://localhost:7001/api'; // Altere conforme necessário
+```
 
-### `npm run build`
+## Instalação e Execução
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Instalar dependências:**
+   ```bash
+   npm install
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. **Executar em modo de desenvolvimento:**
+   ```bash
+   npm start
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. **Build para produção:**
+   ```bash
+   npm run build
+   ```
 
-### `npm run eject`
+## Estrutura do Projeto
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```
+src/
+├── components/
+│   ├── Login.tsx          # Componente de login
+│   ├── Register.tsx       # Componente de registro
+│   └── SuccessMessage.tsx # Mensagem de sucesso
+├── services/
+│   └── api.ts            # Serviços de API
+├── types/
+│   └── auth.ts           # Tipos TypeScript
+├── App.tsx               # Componente principal
+└── index.css             # Estilos globais (Tailwind)
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Endpoints da API
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+O frontend se conecta aos seguintes endpoints:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- `POST /api/auth/login` - Autenticação de usuário
+- `POST /api/auth/register` - Registro de novo usuário
 
-## Learn More
+## Funcionalidades dos Componentes
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Login
+- Formulário com email e senha
+- Validação de campos obrigatórios
+- Tratamento de erros da API
+- Loading state durante requisições
+- Link para tela de registro
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Register
+- Formulário com email, senha e confirmação de senha
+- Validação de senhas coincidentes
+- Validação de tamanho mínimo de senha
+- Tratamento de erros da API
+- Loading state durante requisições
+- Link para tela de login
+
+### SuccessMessage
+- Exibição de mensagem de sucesso após registro
+- Botão para navegar para tela de login
+
+## Estilização
+
+O projeto utiliza Tailwind CSS para estilização, oferecendo:
+- Design moderno e responsivo
+- Gradientes e cores atrativas
+- Animações e transições suaves
+- Estados de hover e focus
+- Loading spinners animados
+
+## Próximos Passos
+
+- Implementar persistência do token JWT
+- Adicionar rotas protegidas
+- Criar dashboard principal
+- Implementar logout
+- Adicionar testes unitários
