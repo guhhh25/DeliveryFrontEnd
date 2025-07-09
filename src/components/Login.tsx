@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '../services/api';
-import { LoginRequest } from '../types/auth';
+import { LoginRequest, UserRole } from '../types/auth';
 import { useAuth } from '../contexts/AuthContext';
 import { extractUserFromToken } from '../utils/jwt';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
-  onLoginSuccess: () => void;
+  onLoginSuccess?: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: '',
@@ -19,6 +20,13 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/index', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -39,13 +47,18 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
       const userData = {
         id: response.id,
         email: formData.email,
+        role: response.role || UserRole.CUSTOMER, // Usar role da resposta ou default para customer
       };
+      
+      console.log('Login response:', response);
+      console.log('User data:', userData);
       
       // Salvar no contexto de autenticação
       login(response.token, userData);
       
-      // Chamar callback de sucesso
-      onLoginSuccess();
+      // Redirecionar usando react-router
+      navigate('/index', { replace: true });
+      if (onLoginSuccess) onLoginSuccess();
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
@@ -88,7 +101,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
   const buttonVariants = {
     hover: {
       scale: 1.02,
-      boxShadow: "0 10px 25px rgba(99, 102, 241, 0.3)",
+      boxShadow: "0 10px 25px rgba(251, 146, 60, 0.3)",
       transition: {
         duration: 0.2,
         ease: "easeInOut" as const
@@ -112,11 +125,11 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-red-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full opacity-10"
+          className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-orange-400 to-red-600 rounded-full opacity-10"
           animate={{
             rotate: 360,
             scale: [1, 1.1, 1],
@@ -128,7 +141,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
           }}
         />
         <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-blue-400 to-indigo-600 rounded-full opacity-10"
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-red-400 to-orange-600 rounded-full opacity-10"
           animate={{
             rotate: -360,
             scale: [1, 1.2, 1],
@@ -139,6 +152,35 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
             ease: "linear"
           }}
         />
+        {/* Floating food icons */}
+        <motion.div
+          className="absolute top-20 left-20 text-4xl"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 3, repeat: Infinity }}
+        >
+          🍕
+        </motion.div>
+        <motion.div
+          className="absolute top-40 right-32 text-3xl"
+          animate={{ y: [0, -15, 0] }}
+          transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+        >
+          🍔
+        </motion.div>
+        <motion.div
+          className="absolute bottom-32 left-32 text-3xl"
+          animate={{ y: [0, -12, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, delay: 2 }}
+        >
+          🍣
+        </motion.div>
+        <motion.div
+          className="absolute bottom-20 right-20 text-4xl"
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+        >
+          🥤
+        </motion.div>
       </div>
 
       <motion.div
@@ -149,28 +191,26 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
       >
         <motion.div variants={itemVariants}>
           <motion.div
-            className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg"
+            className="mx-auto h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg"
             whileHover={{ rotate: 360, scale: 1.1 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
           >
-            <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            <span className="text-4xl">🍕</span>
           </motion.div>
           <motion.h2
-            className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+            className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent"
             variants={itemVariants}
           >
-            Bem-vindo de volta
+            Bem-vindo ao FoodExpress
           </motion.h2>
           <motion.p
             className="mt-2 text-center text-sm text-gray-600"
             variants={itemVariants}
           >
-            Entre na sua conta ou{' '}
+            Entre na sua conta para pedir suas comidas favoritas ou{' '}
             <motion.button
               onClick={onSwitchToRegister}
-              className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+              className="font-medium text-orange-600 hover:text-orange-500 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -200,7 +240,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
                   type="email"
                   autoComplete="email"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   placeholder="seu@email.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -229,7 +269,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
@@ -287,7 +327,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
             <motion.button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
@@ -322,11 +362,37 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onLoginSuccess }) => 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </motion.svg>
                 )}
-                {loading ? 'Entrando...' : 'Entrar'}
+                {loading ? 'Entrando...' : 'Entrar no FoodExpress'}
               </motion.div>
             </motion.button>
           </motion.div>
         </motion.form>
+
+        {/* Delivery features preview */}
+        <motion.div
+          className="mt-8 p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-orange-200"
+          variants={itemVariants}
+        >
+          <h3 className="text-sm font-semibold text-gray-800 mb-2 text-center">🍽️ O que você encontra aqui:</h3>
+          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+            <div className="flex items-center">
+              <span className="mr-1">🍕</span>
+              <span>Pizzas Artesanais</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-1">🍔</span>
+              <span>Burgers Gourmet</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-1">🍣</span>
+              <span>Sushi Fresco</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-1">🥤</span>
+              <span>Bebidas Naturais</span>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
   );

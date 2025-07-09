@@ -1,145 +1,70 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import SuccessMessage from './components/SuccessMessage';
-import Dashboard from './components/Dashboard';
+import AdminDashboard from './components/AdminDashboard';
 import DeliveryHome from './components/DeliveryHome';
-import { motion } from 'framer-motion';
+import EmpresaPage from './components/EmpresaPage';
+import HamburgerMenu from './components/HamburgerMenu';
 
-type ViewType = 'delivery' | 'login' | 'register' | 'success';
-
-function AppContent() {
-  const { isAuthenticated } = useAuth();
-  const [currentView, setCurrentView] = useState<ViewType>('delivery');
-
-  const handleLoginSuccess = () => {
-    // O usuário será redirecionado automaticamente para o Dashboard
-    // através do contexto de autenticação
-  };
-
-  const handleRegisterSuccess = () => {
-    setCurrentView('success');
-  };
-
-  const handleSwitchToLogin = () => {
-    setCurrentView('login');
-  };
-
-  const handleSwitchToRegister = () => {
-    setCurrentView('register');
-  };
-
-  const handleSwitchToDelivery = () => {
-    setCurrentView('delivery');
-  };
-
-  // Se o usuário estiver autenticado, mostrar o Dashboard
-  if (isAuthenticated) {
-    return <Dashboard />;
-  }
-
-  // Caso contrário, mostrar as telas de autenticação ou delivery
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'delivery':
-        return (
-          <div className="relative">
-            <DeliveryHome />
-            {/* Botão de login flutuante */}
-            <motion.button
-              onClick={handleSwitchToLogin}
-              className="fixed top-6 left-6 bg-white text-orange-600 px-4 py-2 rounded-full shadow-lg font-semibold z-50"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Entrar
-            </motion.button>
-          </div>
-        );
-      case 'login':
-        return (
-          <div className="relative">
-            <Login
-              onSwitchToRegister={handleSwitchToRegister}
-              onLoginSuccess={handleLoginSuccess}
-            />
-            {/* Botão para voltar ao delivery */}
-            <motion.button
-              onClick={handleSwitchToDelivery}
-              className="fixed top-6 left-6 bg-orange-600 text-white px-4 py-2 rounded-full shadow-lg font-semibold z-50"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Voltar
-            </motion.button>
-          </div>
-        );
-      case 'register':
-        return (
-          <div className="relative">
-            <Register
-              onSwitchToLogin={handleSwitchToLogin}
-              onRegisterSuccess={handleRegisterSuccess}
-            />
-            {/* Botão para voltar ao delivery */}
-            <motion.button
-              onClick={handleSwitchToDelivery}
-              className="fixed top-6 left-6 bg-green-600 text-white px-4 py-2 rounded-full shadow-lg font-semibold z-50"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Voltar
-            </motion.button>
-          </div>
-        );
-      case 'success':
-        return (
-          <div className="relative">
-            <SuccessMessage
-              message="Conta criada com sucesso! Agora você pode fazer login."
-              onAction={handleSwitchToLogin}
-              actionText="Ir para o Login"
-            />
-            {/* Botão para voltar ao delivery */}
-            <motion.button
-              onClick={handleSwitchToDelivery}
-              className="fixed top-6 left-6 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg font-semibold z-50"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Voltar
-            </motion.button>
-          </div>
-        );
-      default:
-        return (
-          <div className="relative">
-            <DeliveryHome />
-            <motion.button
-              onClick={handleSwitchToLogin}
-              className="fixed top-6 left-6 bg-white text-orange-600 px-4 py-2 rounded-full shadow-lg font-semibold z-50"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Entrar
-            </motion.button>
-          </div>
-        );
-    }
-  };
-
+// Layout com menu lateral
+const Layout: React.FC = () => {
   return (
-    <div className="App">
-      {renderCurrentView()}
+    <div className="min-h-screen bg-gray-50">
+      <HamburgerMenu />
+      <main className="pt-8">
+        <Outlet />
+      </main>
     </div>
+  );
+};
+
+// Rota protegida
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
+function AppRoutes() {
+  const { isAuthenticated, isAdmin } = useAuth();
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated
+            ? <Navigate to="/index" replace />
+            : <Login onSwitchToRegister={() => window.location.href = '/register'} />
+        }
+      />
+      <Route path="/register" element={<Register onSwitchToLogin={() => window.location.href = '/login'} onRegisterSuccess={() => window.location.href = '/login'} />} />
+      <Route path="/success" element={<SuccessMessage message="Conta criada com sucesso! Agora você pode fazer login." onAction={() => window.location.href = '/login'} actionText="Ir para o Login" />} />
+      <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+        <Route path="/index" element={<div />} />
+        <Route path="/empresa" element={<EmpresaPage />} />
+        <Route path="/loja" element={<DeliveryHome />} />
+        <Route path="/pedidos" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Pedidos</h1><p>Funcionalidade em desenvolvimento</p></div>} />
+        <Route path="/produtos" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Produtos</h1><p>Funcionalidade em desenvolvimento</p></div>} />
+        <Route path="/relatorios" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Relatórios</h1><p>Funcionalidade em desenvolvimento</p></div>} />
+        {isAdmin && <Route path="/admin" element={<AdminDashboard />} />}
+        <Route path="/" element={<Navigate to="/index" replace />} />
+      </Route>
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/index" : "/login"} replace />} />
+    </Routes>
   );
 }
 
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppRoutes />
+      </Router>
     </AuthProvider>
   );
 }

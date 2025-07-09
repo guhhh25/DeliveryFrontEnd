@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { LoginRequest, RegisterRequest, LoginResponse, RegisterResponse } from '../types/auth';
 import { isTokenExpired } from '../utils/jwt';
+import { getApiUrl } from '../config/api';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5162/api';
+// URL da API fixa
+const API_BASE_URL = getApiUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -24,7 +26,6 @@ api.interceptors.request.use(
         window.location.href = '/';
         return Promise.reject(new Error('Token expirado'));
       }
-      
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -58,6 +59,7 @@ export const authService = {
     const response = await api.post<RegisterResponse>('/auth/register', {
       email: userData.email,
       password: userData.password,
+      confirmPassword: userData.confirmPassword,
     });
     return response.data;
   },
@@ -67,16 +69,11 @@ export const authService = {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) return false;
-      
-      // Verificar se o token não expirou
       if (isTokenExpired(token)) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         return false;
       }
-      
-      // Você pode criar um endpoint /auth/validate no backend
-      // Por enquanto, vamos apenas verificar se o token existe e não expirou
       return true;
     } catch (error) {
       return false;

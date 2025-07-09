@@ -1,10 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { isTokenExpired } from '../utils/jwt';
-
-interface User {
-  id: string;
-  email: string;
-}
+import { User, UserRole } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +8,10 @@ interface AuthContextType {
   login: (token: string, userData: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  hasRole: (role: UserRole) => boolean;
+  isAdmin: boolean;
+  isCustomer: boolean;
+  isRestaurantOwner: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +41,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         const userData = JSON.parse(savedUser);
+        
+        // Migração: se dados antigos não têm role, adicionar role padrãoq
+        if (!userData.role) {
+          userData.role = UserRole.CUSTOMER;
+        }
+        
         setToken(savedToken);
         setUser(userData);
         setIsAuthenticated(true);
@@ -73,12 +79,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  // Função para verificar se o usuário tem um role específico
+  const hasRole = (role: UserRole): boolean => {
+    return user?.role === role;
+  };
+
+  // Propriedades computadas para facilitar verificações
+  const isAdmin = hasRole(UserRole.ADMIN);
+  const isCustomer = hasRole(UserRole.CUSTOMER);
+  const isRestaurantOwner = hasRole(UserRole.RESTAURANT_OWNER);
+
   const value: AuthContextType = {
     user,
     token,
     login,
     logout,
     isAuthenticated,
+    hasRole,
+    isAdmin,
+    isCustomer,
+    isRestaurantOwner,
   };
 
   return (

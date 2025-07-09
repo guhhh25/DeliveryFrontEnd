@@ -46,12 +46,32 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onRegisterSuccess 
     }
 
     try {
-      console.log(formData)
+      console.log('Enviando dados:', formData);
       let auth = await authService.register(formData);
-      console.log(auth);
+      console.log('Resposta do servidor:', auth);
       onRegisterSuccess();
     } catch (err: any) {
+      console.error('Erro no registro:', err);
+      
+      if (err.response?.data?.errors) {
+        // Erros de validação do backend
+        const errorMessages = Array.isArray(err.response.data.errors) 
+          ? err.response.data.errors.join(', ')
+          : err.response.data.errors;
+        setError(errorMessages);
+      } else if (err.response?.data?.message) {
+        // Mensagem de erro específica
+        setError(err.response.data.message);
+      } else if (err.response?.status === 400) {
+        // Erro 400 - dados inválidos
+        setError('Dados inválidos. Verifique se o email é válido e a senha tem pelo menos 6 caracteres.');
+      } else if (err.response?.status === 409) {
+        // Erro 409 - usuário já existe
+        setError('Este email já está cadastrado. Tente fazer login ou use outro email.');
+      } else {
+        // Erro genérico
         setError('Erro ao criar conta. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
